@@ -56,7 +56,7 @@ def task_load_snapshot(project, repo_merges=None):
 @defer.inlineCallbacks
 def task_take_snapshot(project, filter=None):
     yield ziggy.tasks.take_snapshot(project,
-                                    repositories=project.config['kubeops']['repositories'].keys(),
+                                    repositories=project.config['flex-fuse']['repositories'].keys(),
                                     project_path=project.config['root_projects']['flex-fuse']['path'],
                                     base_path=project.config['flex-fuse']['base_path'],
                                     filter=filter)
