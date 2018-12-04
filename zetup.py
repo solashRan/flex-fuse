@@ -7,21 +7,17 @@ import ziggy.fs
 import ziggy.tasks
 
 
-def get_repositories(project):
-    return project.config['flex-fuse']['repositories'].keys()
-
-
 def hook_on_module_load(project):
     base_path = os.path.join(project.config['workspace_path'], project.config['root_projects']['flex-fuse']['path'])
-	
-	flex_fuse_config = dict()
+
+    flex_fuse_config = dict()
     flex_fuse_config['base_path'] = base_path
     flex_fuse_config['flex_fuse_path'] = os.path.join(base_path, 'flex-fuse')
     flex_fuse_config['scripts_path'] = os.path.join(base_path, 'scripts')
     flex_fuse_config['docker_path'] = os.path.join(base_path, 'docker')
     flex_fuse_config['repositories'] = {
-		'flex-fuse': project.config['root_projects']['flex-fuse']
-	}
+        'flex-fuse': project.config['root_projects']['flex-fuse']
+    }
 
     flex_fuse_config['zetup_path'] = os.path.join(flex_fuse_config['flex_fuse_path'], 'zetup.py')
     flex_fuse_config['zetup_md5'] = ziggy.fs.calculate_file_md5(project.ctx, flex_fuse_config['zetup_path'])
@@ -37,15 +33,6 @@ def task_wait_all_projects_updated(project):
 @defer.inlineCallbacks
 def task_declare_project_updated(project, zetup_path, old_zetup_md5):
     yield ziggy.tasks.declare_project_updated(project, zetup_path, old_zetup_md5)
-
-
-@defer.inlineCallbacks
-def task_clone(project):
-
-    # make sure clones exist for read only dependencies under vendor
-    yield ziggy.tasks.clone(project,
-                            repositories=dependencies,
-                            base_path=project.config['flex-fuse']['base_path'])
 
 
 @defer.inlineCallbacks
@@ -69,7 +56,7 @@ def task_load_snapshot(project, repo_merges=None):
 @defer.inlineCallbacks
 def task_take_snapshot(project, filter=None):
     yield ziggy.tasks.take_snapshot(project,
-                                    repositories=get_repositories(project),
+                                    repositories=project.config['kubeops']['repositories'].keys(),
                                     project_path=project.config['root_projects']['flex-fuse']['path'],
                                     base_path=project.config['flex-fuse']['base_path'],
                                     filter=filter)
@@ -88,7 +75,6 @@ def task_workflow(project, skipped_tasks=None):
 
     # default workflow
     workflow_tasks = [
-        'clone',
         'update_sources',
         'load_snapshot',
         'verify_zetup_unchanged',
