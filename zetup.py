@@ -77,9 +77,18 @@ def task_build(project, version):
     Internal build function
     """
 
-    # TODO: Fill
-
-    project.logger.debug('Im building', version=version)
+    project.logger.debug('Building', version=version)
+    cmd = 'sh make {0}'.format(version)
+    cwd = project.config['flex-fuse']['flex_fuse_path']
+    out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
+    if code != 0:
+        msg = 'Failed to execute build task'
+        project.logger.warn(msg,
+                            code=code,
+                            out=out,
+                            err=err)
+        raise RuntimeError(msg)
+    project.logger.debug('Build task is done', out=out)
 
 
 @defer.inlineCallbacks
@@ -90,7 +99,7 @@ def task_publish(project, repository):
 
     # TODO: Fill
 
-    project.logger.debug('Im publishing', repository=repository)
+    project.logger.debug('Publishing', repository=repository)
 
 
 @defer.inlineCallbacks
