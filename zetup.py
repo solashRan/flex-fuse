@@ -3,7 +3,7 @@
 
 import os
 
-from twisted.internet import defer, task, reactor
+from twisted.internet import defer
 
 import ziggy.utils
 import ziggy.fs
@@ -14,14 +14,13 @@ def hook_on_module_load(project):
     base_path = os.path.join(project.config['workspace_path'], project.config['root_projects']['flex-fuse']['path'])
 
     flex_fuse_config = dict()
-    flex_fuse_config['base_path'] = base_path
-    flex_fuse_config['flex_fuse_path'] = os.path.join(base_path, 'flex-fuse')
-    flex_fuse_config['scripts_path'] = os.path.join(base_path, 'scripts')
-    flex_fuse_config['docker_path'] = os.path.join(base_path, 'docker')
     flex_fuse_config['repositories'] = {
         'flex-fuse': project.config['root_projects']['flex-fuse']
     }
-
+    flex_fuse_config['base_path'] = base_path
+    flex_fuse_config['flex_fuse_path'] = os.path.join(base_path, 'flex-fuse')
+    flex_fuse_config['scripts_path'] = os.path.join(flex_fuse_config['flex_fuse_path'], 'scripts')
+    flex_fuse_config['docker_path'] = os.path.join(flex_fuse_config['flex_fuse_path'], 'docker')
     flex_fuse_config['zetup_path'] = os.path.join(flex_fuse_config['flex_fuse_path'], 'zetup.py')
     flex_fuse_config['zetup_md5'] = ziggy.fs.calculate_file_md5(project.ctx, flex_fuse_config['zetup_path'])
 
