@@ -7,6 +7,7 @@ from twisted.internet import defer
 import ziggy.utils
 import ziggy.fs
 import ziggy.tasks
+import ziggy.shell
 
 
 def hook_on_module_load(project):
@@ -18,8 +19,6 @@ def hook_on_module_load(project):
     }
     flex_fuse_config['base_path'] = base_path
     flex_fuse_config['flex_fuse_path'] = os.path.join(base_path, 'flex-fuse')
-    flex_fuse_config['scripts_path'] = os.path.join(flex_fuse_config['flex_fuse_path'], 'scripts')
-    flex_fuse_config['docker_path'] = os.path.join(flex_fuse_config['flex_fuse_path'], 'docker')
     flex_fuse_config['zetup_path'] = os.path.join(flex_fuse_config['flex_fuse_path'], 'zetup.py')
     flex_fuse_config['zetup_md5'] = ziggy.fs.calculate_file_md5(project.ctx, flex_fuse_config['zetup_path'])
 
@@ -68,22 +67,22 @@ def task_verify_zetup_unchanged(project):
 
 
 @defer.inlineCallbacks
-def task_build(project, version):
+def task_build(project, version, mirror):
     """
     Internal build function
     """
 
     project.logger.debug('Building', version=version)
-    cmd = 'sh make {0}'.format(version)
     cwd = project.config['flex-fuse']['flex_fuse_path']
+    cmd = 'make release MIRROR={0} IGUAZIO_VERSION={1}'.format(mirror, version)
+
+    project.logger.debug('Building a release candidate', cwd=cwd, cmd=cmd)
     out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
     if code != 0:
-        msg = 'Failed to execute build task'
-        project.logger.warn(msg,
-                            code=code,
-                            out=out,
-                            err=err)
+        msg = 'Build execution failed'
+        project.logger.warn(msg, code=code, out=out, err=err)
         raise RuntimeError(msg)
+
     project.logger.debug('Build task is done', out=out)
 
 
@@ -93,9 +92,42 @@ def task_publish(project, repository):
     Internal publish function
     """
 
-    # TODO: Fill
-
     project.logger.debug('Publishing', repository=repository)
+
+    cwd = project.config['flex-fuse']['flex_fuse_path']
+
+    # Get version from file, created by `make release` execution
+    version_file_path = os.path.join(project.config['flex-fuse']['flex_fuse_path'], 'VERSION')
+    project.logger.debug('Fetching full version', version_file_path=version_file_path)
+    version = ziggy.fs.read_file_contents(project.ctx, version_file_path)
+
+    docker_image_name = 'iguaziodocker/flex-fuse:{0}'.format(version)
+    remote_docker_image_name = '{0}/{1}'.format(repository, docker_image_name)
+    cmd = 'docker tag {0} {1}'.format(docker_image_name, remote_docker_image_name)
+
+    # Tag
+    project.logger.debug('Tagging docker image before push',
+                         cwd=cwd,
+                         cmd=cmd,
+                         docker_image_name=docker_image_name,
+                         remote_docker_image_name=remote_docker_image_name)
+    out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
+    if code != 0:
+        msg = 'Docker tag execution has failed'
+        project.logger.warn(msg, code=code, out=out, err=err)
+        raise RuntimeError(msg)
+
+    # Push
+    cmd = 'docker push {0}'.format(remote_docker_image_name)
+    project.logger.debug('Pushing docker image to repository',
+                         cwd=cwd,
+                         cmd=cmd,
+                         remote_docker_image_name=remote_docker_image_name)
+    out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
+    if code != 0:
+        msg = 'Docker push execution has failed'
+        project.logger.warn(msg, code=code, out=out, err=err)
+        raise RuntimeError(msg)
 
 
 @defer.inlineCallbacks
