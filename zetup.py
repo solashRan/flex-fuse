@@ -1,5 +1,4 @@
-# !! Internal usage !! #
-# This file contains iguazio internal logic
+# !! For Iguazio internal usage only !! #
 
 import os
 
@@ -39,9 +38,6 @@ def task_declare_project_updated(project, zetup_path, old_zetup_md5):
 
 @defer.inlineCallbacks
 def task_update_sources(project):
-
-    # update all branches tracking the upstream branch (e.g. if the upstream branch is 'development', merge
-    # upstream/development -> development). specify that we want to check out the local branch
     yield ziggy.tasks.update_sources(project,
                                      repositories=project.config['flex-fuse']['repositories'],
                                      base_path=project.config['flex-fuse']['base_path'])
@@ -114,7 +110,7 @@ def task_workflow(project, skipped_tasks=None):
         'take_snapshot'
     ]
 
-    # Remove tasks we want to skip.
+    # remove tasks we want to skip.
     workflow_tasks = project.task_manager.normalize_task_semantics(workflow_tasks)
     workflow_tasks = [task for task in workflow_tasks if task['name'] not in skipped_tasks]
 
