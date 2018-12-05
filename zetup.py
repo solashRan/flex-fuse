@@ -1,3 +1,6 @@
+# !! Internal usage !! #
+# This file contains iguazio internal logic
+
 import os
 
 from twisted.internet import defer, task, reactor
@@ -67,6 +70,28 @@ def task_verify_zetup_unchanged(project):
     yield ziggy.tasks.wait_workspace_updated(project,
                                              project.config['flex-fuse']['zetup_path'],
                                              project.config['flex-fuse']['zetup_md5'])
+
+
+@defer.inlineCallbacks
+def task_build(project, version):
+    """
+    Internal build function
+    """
+
+    # TODO: Fill
+
+    project.logger.debug('Im building', version=version)
+
+
+@defer.inlineCallbacks
+def task_publish(project, repository):
+    """
+    Internal publish function
+    """
+
+    # TODO: Fill
+
+    project.logger.debug('Im publishing', repository=repository)
 
 
 @defer.inlineCallbacks
