@@ -27,6 +27,13 @@ def hook_on_module_load(project):
 
 
 @defer.inlineCallbacks
+def task_clone(project):
+    yield ziggy.tasks.clone(project,
+                            repositories=project.config['flex-fuse']['repositories'],
+                            base_path=project.config['flex-fuse']['base_path'])
+
+
+@defer.inlineCallbacks
 def task_wait_all_projects_updated(project):
     yield ziggy.tasks.wait_all_projects_updated(project)
 
@@ -143,6 +150,7 @@ def task_workflow(project, skipped_tasks=None):
 
     # default workflow
     workflow_tasks = [
+        'clone',
         'update_sources',
         'load_snapshot',
         'verify_zetup_unchanged',
