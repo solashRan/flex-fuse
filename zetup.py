@@ -91,7 +91,7 @@ def task_push_docker_images(project, repository, tag, pushed_images_file_path):
     Internal publish function
     """
 
-    project.logger.debug('Publishing',
+    project.logger.debug('Pushing images',
                          repository=repository,
                          tag=tag,
                          pushed_images_file_path=pushed_images_file_path)
@@ -113,11 +113,7 @@ def task_push_docker_images(project, repository, tag, pushed_images_file_path):
                          image_tag=image_tag,
                          docker_image_name=docker_image_name,
                          remote_docker_image_name=remote_docker_image_name)
-    out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
-    if code != 0:
-        msg = 'Docker tag execution has failed'
-        project.logger.warn(msg, code=code, out=out, err=err)
-        raise RuntimeError(msg)
+    yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
 
     # Push
     cmd = 'docker push {0}'.format(remote_docker_image_name)
@@ -125,11 +121,7 @@ def task_push_docker_images(project, repository, tag, pushed_images_file_path):
                          cwd=cwd,
                          cmd=cmd,
                          remote_docker_image_name=remote_docker_image_name)
-    out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
-    if code != 0:
-        msg = 'Docker push execution has failed'
-        project.logger.warn(msg, code=code, out=out, err=err)
-        raise RuntimeError(msg)
+    yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
 
     project.logger.debug('Writing pushed docker image',
                          pushed_images_file_path=pushed_images_file_path,
@@ -141,6 +133,8 @@ def task_push_docker_images(project, repository, tag, pushed_images_file_path):
         'image_name': docker_image_name
     }
     ziggy.fs.write_file_contents(project.ctx, pushed_images_file_path, simplejson.dumps([pushed_image]))
+
+    project.logger.debug('Push images task is done')
 
 
 @defer.inlineCallbacks
