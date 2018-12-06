@@ -68,7 +68,7 @@ def task_verify_zetup_unchanged(project):
 
 
 @defer.inlineCallbacks
-def task_build(project, version, mirror):
+def task_build_images(project, version, mirror):
     """
     Internal build function
     """
