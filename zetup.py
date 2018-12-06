@@ -1,6 +1,7 @@
 # !! For Iguazio internal usage only !! #
 
 import os
+import simplejson
 
 from twisted.internet import defer
 
@@ -87,21 +88,19 @@ def task_build(project, version, mirror):
 
 
 @defer.inlineCallbacks
-def task_publish(project, repository):
+def task_push_docker_images(project, repository, tag, pushed_images_file_path):
     """
     Internal publish function
     """
 
-    project.logger.debug('Publishing', repository=repository)
+    project.logger.debug('Publishing',
+                         repository=repository,
+                         tag=tag,
+                         pushed_images_file_path=pushed_images_file_path)
 
     cwd = project.config['flex-fuse']['flex_fuse_path']
 
-    # Get version from file, created by `make release` execution
-    version_file_path = os.path.join(project.config['flex-fuse']['flex_fuse_path'], 'VERSION')
-    project.logger.debug('Fetching full version', version_file_path=version_file_path)
-    version = ziggy.fs.read_file_contents(project.ctx, version_file_path)
-
-    docker_image_name = 'iguaziodocker/flex-fuse:{0}'.format(version)
+    docker_image_name = 'iguaziodocker/flex-fuse:{0}'.format(tag)
     remote_docker_image_name = '{0}/{1}'.format(repository, docker_image_name)
     cmd = 'docker tag {0} {1}'.format(docker_image_name, remote_docker_image_name)
 
@@ -128,6 +127,17 @@ def task_publish(project, repository):
         msg = 'Docker push execution has failed'
         project.logger.warn(msg, code=code, out=out, err=err)
         raise RuntimeError(msg)
+
+    project.logger.debug('Writing pushed docker image',
+                         pushed_images_file_path=pushed_images_file_path,
+                         remote_docker_image_name=remote_docker_image_name,
+                         docker_image_name=docker_image_name)
+
+    pushed_image = {
+        'target_image_name': remote_docker_image_name,
+        'image_name': docker_image_name
+    }
+    ziggy.fs.write_file_contents(project.ctx, pushed_images_file_path, simplejson.dumps([pushed_image]))
 
 
 @defer.inlineCallbacks
