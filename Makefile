@@ -2,13 +2,11 @@ RPM_PATH = "iguazio_yum"
 DEB_PATH = "iguazio_deb"
 BINARY_NAME = "igz-fuse"
 RELEASE_VERSION = "0.6.1"
-DOCKER_HUB_USER = "iguaziodocker"
-QUAY_IO_USER = "quay.io/iguazio"
 FULL_VERSION = $(RELEASE_VERSION)-$(IGUAZIO_VERSION:igz_%=%)
 
 .PHONY: build
 build: lint vet
-	docker build --tag $(DOCKER_HUB_USER)/flex-fuse:unstable .
+	docker build --tag flex-fuse:unstable .
 
 .PHONY: download
 download:
@@ -19,8 +17,7 @@ download:
 
 .PHONY: release
 release: check-req download build
-	docker tag $(DOCKER_HUB_USER)/flex-fuse:unstable $(DOCKER_HUB_USER)/flex-fuse:$(FULL_VERSION)
-	docker tag $(DOCKER_HUB_USER)/flex-fuse:unstable $(QUAY_IO_USER)/flex-fuse:$(FULL_VERSION)
+	docker tag flex-fuse:unstable flex-fuse:$(FULL_VERSION)
 	echo $(FULL_VERSION) > VERSION
 
 check-req:

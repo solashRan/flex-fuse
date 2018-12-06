@@ -73,18 +73,16 @@ def task_build_images(project, version, mirror):
     Internal build function
     """
 
-    project.logger.debug('Building', version=version)
+    project.logger.debug('Building', version=version, mirror=mirror)
+
     cwd = project.config['flex-fuse']['flex_fuse_path']
     cmd = 'make release MIRROR={0} IGUAZIO_VERSION={1}'.format(mirror, version)
 
     project.logger.debug('Building a release candidate', cwd=cwd, cmd=cmd)
-    out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
-    if code != 0:
-        msg = 'Build execution failed'
-        project.logger.warn(msg, code=code, out=out, err=err)
-        raise RuntimeError(msg)
 
-    project.logger.debug('Build task is done', out=out)
+    out, _, _ = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
+
+    project.logger.debug('Build images task is done', out=out)
 
 
 @defer.inlineCallbacks
@@ -100,7 +98,11 @@ def task_push_docker_images(project, repository, tag, pushed_images_file_path):
 
     cwd = project.config['flex-fuse']['flex_fuse_path']
 
-    docker_image_name = 'iguaziodocker/flex-fuse:{0}'.format(tag)
+    version_path = os.path.join(cwd, 'VERSION')
+    project.logger.debug('Collecting output version', version_path=version_path)
+    image_tag = ziggy.fs.read_file_contents(project.ctx, version_path)
+
+    docker_image_name = 'flex-fuse:{0}'.format(image_tag)
     remote_docker_image_name = '{0}/{1}'.format(repository, docker_image_name)
     cmd = 'docker tag {0} {1}'.format(docker_image_name, remote_docker_image_name)
 
@@ -108,6 +110,7 @@ def task_push_docker_images(project, repository, tag, pushed_images_file_path):
     project.logger.debug('Tagging docker image before push',
                          cwd=cwd,
                          cmd=cmd,
+                         image_tag=image_tag,
                          docker_image_name=docker_image_name,
                          remote_docker_image_name=remote_docker_image_name)
     out, err, code = yield ziggy.shell.run(project.ctx, cmd, cwd=cwd)
