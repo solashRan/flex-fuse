@@ -107,7 +107,7 @@ def task_push_images(project, repository, tag, pushed_images_file_path):
 
     version_path = os.path.join(cwd, 'VERSION')
     project.logger.debug('Collecting output version', version_path=version_path)
-    image_tag = ziggy.fs.read_file_contents(project.ctx, version_path)
+    image_tag = ziggy.fs.read_file_contents(project.ctx, version_path).strip()
 
     docker_image_name = 'flex-fuse:{0}'.format(image_tag)
     remote_docker_image_name = '{0}/{1}'.format(repository, docker_image_name)
