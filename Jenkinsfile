@@ -27,13 +27,16 @@ builder.set_job_properties([
 
 common.notify_slack {
     common.set_current_display_name(params.build_version)
-    nodes.centos_node() {
-        common.git_clone('zarcho', params.zarcho_user, params.zarcho_branch)
-        stash name: 'zarcho'
+
+    stage('git clone') {
+        nodes.centos_node() {
+            common.git_clone('zarcho', params.zarcho_user, params.zarcho_branch)
+            stash name: 'zarcho'
+        }
     }
 
-    throttle(['build']) {
-        node('k8s-builder') {
+    stage('build images') {
+        nodes.throttle_k8s_node('build') {
             builder.build_flexfuse(params.build_version, params.snapshot, params.workflow)
         }
     }
