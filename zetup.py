@@ -93,7 +93,7 @@ def task_build_images(project, version, mirror):
 
 
 @defer.inlineCallbacks
-def task_push_docker_images(project, repository, tag, pushed_images_file_path):
+def task_push_images(project, repository, tag, pushed_images_file_path):
     """
     Internal publish function
     """
