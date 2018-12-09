@@ -1,11 +1,11 @@
 RPM_PATH = "iguazio_yum"
 DEB_PATH = "iguazio_deb"
 BINARY_NAME = "igz-fuse"
-RELEASE_VERSION = "0.6.1"
+RELEASE_VERSION = "0.6.2"
 FULL_VERSION = $(RELEASE_VERSION)-$(IGUAZIO_VERSION:igz_%=%)
 
 .PHONY: build
-build: lint vet
+build:
 	docker build --tag flex-fuse:unstable .
 
 .PHONY: download
