@@ -1,3 +1,6 @@
+import groovy.json.JsonOutput
+
+
 ZARCHO_GIT = "git@github.com:${params.zarcho_user}/zarcho.git"
 GITHUB_AUTH = 'github_auth_id'
 
@@ -21,7 +24,6 @@ builder.set_job_properties([
     string(defaultValue: 'next', description: '', name: 'zarcho_branch'),
     string(defaultValue: 'iguazio', description: '', name: 'zarcho_user'),
     string(defaultValue: 'short', description: '', name: 'workflow'),
-    text(defaultValue: libraryResource('default_snapshot.json'), description: '', name: 'snapshot'),
 ])
 
 
@@ -37,7 +39,15 @@ common.notify_slack {
 
     stage('build images') {
         nodes.throttle_k8s_node('build') {
-            builder.build_flexfuse(params.build_version, params.snapshot, params.workflow)
+            def snapshot = ['k8s':
+                                ['flex-fuse':
+                                    ['branch': params.flex_fuse_branch,
+                                     'git_url': "git@github.com:${params.flex_fuse_user}/flex-fuse.git",
+                                    ]
+                                ]
+                           ]
+
+            builder.build_flexfuse(params.build_version, JsonOutput.toJson(snapshot), params.workflow)
         }
     }
 }
